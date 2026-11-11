@@ -1,12 +1,14 @@
 (() => {
 "use strict";
 const NS = "http://www.w3.org/2000/svg";
-const W = 1000, H = 540, MX = 632, AY = 277;
+const W = 1000, H = 540, AY = 277;
+let MX = 632;
 const $ = id => document.getElementById(id);
 const state = { mirror:"convex", source:"point", distance:165, height:34, radius:140, spread:18, count:2,
-  selected:1, step:5, normal:true, extension:true, fc:true, angle:false, grid:false, solo:false };
+  refractiveIndex:1.50, selected:1, step:5, normal:true, extension:true, fc:true, angle:false, grid:false, solo:false };
 const palettes = { incident:"#df9b37", reflected:"#2878c6", normal:"#129f8e", extended:"#d777a0", image:"#168c82" };
 const names = { convex:"凸面鏡", concave:"凹面鏡", plane:"平面鏡" };
+const isLens = () => window.LensOptics.isLens(state);
 const clamp = (v,a,b) => Math.min(b,Math.max(a,v));
 const add = (a,b) => ({x:a.x+b.x,y:a.y+b.y});
 const mul = (a,t) => ({x:a.x*t,y:a.y*t});
@@ -32,6 +34,7 @@ const defs = '<defs>'+
 
 function focal() { return state.mirror==="plane" ? null : (state.mirror==="convex" ? -state.radius/2 : state.radius/2); }
 function theory() {
+  if(isLens()) return window.LensOptics.theory(state);
   const f=focal();
   if(state.source==="parallel") return {f:f,v:null,m:null,kind:"parallel"};
   if(f===null) return {f:null,v:-state.distance,m:1,kind:"virtual"};
@@ -52,6 +55,7 @@ function outwardNormal(p) {
   return unit({x:-state.radius-p.x,y:-p.y});
 }
 function rayAt(i) {
+  if(isLens()) return window.LensOptics.rayAt(state,i);
   const y=state.count===1?0:-state.spread+(2*state.spread*i)/(state.count-1);
   const P=surface(y);
   const O=state.source==="parallel"?{x:-280,y:y}:{x:-state.distance,y:state.height};
@@ -72,6 +76,7 @@ function pathMirror(){
   return points.join(" ");
 }
 function visibleWorldScale(){
+  if(isLens())return window.LensOptics.scale(state,theory());
   const needsLeft=Math.max(state.source==="parallel"?280:state.distance,state.mirror==="concave"?state.radius:0,40);
   const needsRight=state.mirror==="convex"?state.radius:state.mirror==="plane"?state.distance:40;
   return Math.min(2.13, 532/needsLeft, 318/needsRight);
@@ -94,6 +99,12 @@ function drawExtension(ray,focus){
 }
 function computeSvg(){
   scale=visibleWorldScale();
+  if(isLens()){
+    const result=window.LensOptics.draw(state,{W,H,MX,AY,defs});
+    $("scene").innerHTML=result.svg;
+    window.LensOptics.updateResults(state,result.model,result.ray,$);
+    return;
+  }
   const optical=theory();
   const rayList=Array.from({length:state.count},(_,i)=>rayAt(i));
   const selected=rayList[state.selected];
@@ -193,6 +204,20 @@ function updateResults(t,ray){
   document.querySelectorAll(".step").forEach(btn=>{btn.classList.toggle("active",Number(btn.dataset.step)===state.step);btn.setAttribute("aria-pressed",String(Number(btn.dataset.step)===state.step));});
 }
 function updateControls(){
+  const lens=isLens();
+  $("stepProcess").textContent=lens?"折射":"反射";
+  $("rayLabel").textContent=lens?"折射":"反射";
+  $("insideLegend").hidden=!lens;
+  $("angleRelation").textContent=lens?"→":"＝";
+  $("outputAngleLabel").textContent=lens?"折射角 θₜ":"反射角 θᵣ";
+  $("extensionLabel").textContent=lens?"出射光反向延長線":"反射光反向延長線";
+  $("focalLabel").textContent=lens?"焦點 F／F′":"焦點 F／曲率中心 C";
+  $("deviceNote").textContent=lens?(state.mirror==="slab"?"玻璃板：兩面折射，沒有會聚能力":"透鏡：光線經過兩個界面時折射"):"鏡面：光線在表面反射";
+  $("footnote").textContent=lens?"依司乃耳定律追跡入射、玻璃內及出射光線（不計表面反射）；焦點與像點由近軸光線估算。":"依鏡面反射定律追跡光線；焦距及成像位置以近軸近似標示，較遠離主軸時可能出現球面像差。";
+  $("indexField").hidden=!lens;
+  $("radiusField").hidden=state.mirror==="slab";
+  $("refractiveIndex").value=state.refractiveIndex;
+  $("refractiveIndexValue").textContent=state.refractiveIndex.toFixed(2);
   document.querySelectorAll("[data-group]").forEach(group=>group.querySelectorAll("[data-val]").forEach(btn=>{
     const isActive=state[group.dataset.group]===btn.dataset.val;
     btn.classList.toggle("active",isActive);btn.setAttribute("aria-pressed",String(isActive));
@@ -203,8 +228,8 @@ function updateControls(){
   }
   $("distanceField").classList.toggle("disabled",state.source==="parallel");
   $("heightField").classList.toggle("disabled",state.source==="parallel");
-  $("radiusField").classList.toggle("disabled",state.mirror==="plane");
-  $("distance").disabled=state.source==="parallel";$("height").disabled=state.source==="parallel";$("radius").disabled=state.mirror==="plane";
+  $("radiusField").classList.toggle("disabled",state.mirror==="plane"||state.mirror==="slab");
+  $("distance").disabled=state.source==="parallel";$("height").disabled=state.source==="parallel";$("radius").disabled=state.mirror==="plane"||state.mirror==="slab";
   for(const key of ["normal","extension","fc","angle","grid","solo"]) $(key+"Toggle").checked=state[key];
   const raySelect=$("focusRay"),old=raySelect.value;
   raySelect.innerHTML=Array.from({length:state.count},(_,i)=>{
@@ -214,7 +239,7 @@ function updateControls(){
   state.selected=clamp(state.selected,0,state.count-1);
   raySelect.value=String(state.selected);
 }
-function render(){updateControls();computeSvg();}
+function render(){MX=isLens()?485:632;updateControls();computeSvg();}
 function applyPreset(which){
   const presets={
     convex:["convex","point",165,34,140,18,2,true],
@@ -222,7 +247,13 @@ function applyPreset(which){
     concaveReal:["concave","point",170,34,140,18,2,false],
     concaveFocus:["concave","point",70,12,140,8,2,false],
     concaveVirtual:["concave","point",47,24,140,12,2,true],
-    plane:["plane","point",125,34,140,16,2,true]
+    plane:["plane","point",125,34,140,16,2,true],
+    slab:["slab","parallel",165,34,140,18,2,false],
+    slabPoint:["slab","point",165,34,140,18,2,true],
+    convexLens:["convexLens","point",210,30,110,18,2,false],
+    convexLensParallel:["convexLens","parallel",210,30,110,18,2,false],
+    concaveLens:["concaveLens","point",160,30,110,18,2,true],
+    concaveLensParallel:["concaveLens","parallel",160,30,110,18,2,true]
   };
   const p=presets[which];if(!p)return;
   [state.mirror,state.source,state.distance,state.height,state.radius,state.spread,state.count,state.extension]=p;
@@ -240,14 +271,14 @@ function exportSvg(){
   clone.setAttribute("xmlns",NS);
   return new XMLSerializer().serializeToString(clone);
 }
-$("exportSVG").addEventListener("click",()=>download(new Blob([exportSvg()],{type:"image/svg+xml;charset=utf-8"}),"鏡面反射光路.svg"));
+$("exportSVG").addEventListener("click",()=>download(new Blob([exportSvg()],{type:"image/svg+xml;charset=utf-8"}),"反射與折射光路.svg"));
 $("exportPNG").addEventListener("click",()=>{
   const b=new Blob([exportSvg()],{type:"image/svg+xml;charset=utf-8"});
   const url=URL.createObjectURL(b),im=new Image();
   im.onload=()=>{
     const c=document.createElement("canvas");c.width=2000;c.height=1080;
     const ctx=c.getContext("2d");ctx.scale(2,2);ctx.fillStyle="#fff";ctx.fillRect(0,0,W,H);ctx.drawImage(im,0,0,W,H);
-    c.toBlob(blob=>download(blob,"鏡面反射光路.png"),"image/png");
+    c.toBlob(blob=>download(blob,"反射與折射光路.png"),"image/png");
     URL.revokeObjectURL(url);
   };
   im.onerror=()=>{alert("PNG 匯出失敗，可改用 SVG 匯出。");URL.revokeObjectURL(url);};
@@ -256,6 +287,11 @@ $("exportPNG").addEventListener("click",()=>{
 $("reset").addEventListener("click",()=>{state.fc=true;state.angle=false;state.grid=false;applyPreset("convex");});
 document.querySelectorAll("[data-group]").forEach(group=>group.addEventListener("click",e=>{
   const btn=e.target.closest("[data-val]");if(!btn)return;
+  if(group.dataset.group==="mirror"){
+    const value=btn.dataset.val;
+    applyPreset(value==="slab"?"slabPoint":value);
+    return;
+  }
   state[group.dataset.group]=btn.dataset.val;state.selected=Math.min(1,state.count-1);
   if(group.dataset.group==="mirror")state.extension=state.mirror!=="concave";
   render();
@@ -265,6 +301,7 @@ document.querySelectorAll("[data-preset]").forEach(btn=>btn.addEventListener("cl
 for(const id of ["distance","height","radius","spread","count"]) $(id).addEventListener("input",e=>{
   state[id]=Number(e.target.value);state.selected=clamp(state.selected,0,state.count-1);render();
 });
+$("refractiveIndex").addEventListener("input",e=>{state.refractiveIndex=Number(e.target.value);render();});
 for(const key of ["normal","extension","fc","angle","grid","solo"]) $(key+"Toggle").addEventListener("change",e=>{state[key]=e.target.checked;render();});
 $("focusRay").addEventListener("change",e=>{state.selected=Number(e.target.value);render();});
 const svg=$("scene");
@@ -289,13 +326,15 @@ svg.addEventListener("pointerdown",event=>{
   const rays=Array.from({length:state.count},(_,i)=>rayAt(i));
   let best=Infinity,index=-1;
   rays.forEach((r,i)=>{
-    const p=sp(r.P),o=sp(r.O);
+    if(!r)return;
+    const p=sp(r.P),o=sp(r.O||{x:-280,y:r.P.y});
     const d=distanceToSegment(where,o,p);
     if(d<best){best=d;index=i;}
   });
   // Permit selecting either the incoming or the reflected segment.
   rays.forEach((r,i)=>{
-    const a=sp(r.P),b=sp(add(r.P,mul(r.R,245)));
+    if(!r)return;
+    const a=sp(r.P2||r.P),b=sp(add(r.P2||r.P,mul(r.R,245)));
     const d=distanceToSegment(where,a,b);
     if(d<best){best=d;index=i;}
   });
