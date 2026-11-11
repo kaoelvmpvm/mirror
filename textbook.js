@@ -30,7 +30,7 @@ function imageProperties(state){
 function point(p,origin,axis,scale){return {x:origin+p.x*scale,y:axis-p.y*scale};}
 const line=(a,b,c,width=2.7,dash="",alpha=1,attr="")=>'<line x1="'+a.x.toFixed(2)+'" y1="'+a.y.toFixed(2)+'" x2="'+b.x.toFixed(2)+'" y2="'+b.y.toFixed(2)+'" stroke="'+c+'" stroke-width="'+width+'" stroke-linecap="round" opacity="'+alpha+'"'+(dash?' stroke-dasharray="'+dash+'"':"")+(attr?" "+attr:"")+'/>';
 const txt=(x,y,s,style="")=>'<text x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" '+style+'>'+s+'</text>';
-function make(state,{mini=false}={}){
+function make(state,{mini=false,idPrefix="main"}={}){
  const th=imageProperties(state);
  const {u,f,v,m}=th,absf=Math.abs(f);
  const center=500,axis=mini?245:270;
@@ -128,6 +128,9 @@ function make(state,{mini=false}={}){
   out+=txt(785,75,"折射光近似平行；像在無限遠",'font-size="16" fill="#425d7c" text-anchor="middle" font-weight="800"');
  }
  if(!mini)out+=txt(40,axis-17,"主軸",'font-size="12" fill="#8fa1b4"');
+ // Separate marker IDs across the main plot and all overview SVG cards.
+ const safePrefix=String(idPrefix).replace(/[^a-zA-Z0-9_-]/g,"");
+ out=out.replace(/\b(?:textbookMask|tbIn|tbOut|tbObj|tbImg)\b/g,match=>match+"-"+safePrefix);
  return {svg:out,properties:th,scale,center,axis};
 }
 function describe(state,$){
@@ -178,7 +181,7 @@ function overview(state){
  return scenarios.map(c=>{
   const copy={...state,source:"point",selected:0,count:2,solo:false,fc:true,extension:c.kind==="virtual",
     height:30,distance:focus(state)*c.ratio,step:5,grid:false};
-  const geom=make(copy,{mini:true});
+  const geom=make(copy,{mini:true,idPrefix:c.key});
   const t=geom.properties;
   const kind=t.kind==="infinity"?"像在無限遠":t.kind==="real"?"倒立實像":"正立虛像";
   const size=t.kind==="infinity"?"":Math.abs(t.m)<.96?"・縮小":Math.abs(t.m)>1.04?"・放大":"・等大";
