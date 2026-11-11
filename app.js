@@ -290,21 +290,30 @@ $("exportPNG").addEventListener("click",()=>{
   im.src=url;
 });
 $("reset").addEventListener("click",()=>{state.fc=true;state.angle=false;state.grid=false;applyPreset("convex");});
-document.querySelectorAll("[data-group]").forEach(group=>group.addEventListener("click",e=>{
-  const btn=e.target.closest("[data-val]");if(!btn)return;
-  if(group.dataset.group==="mirror"){
-    // The concave mirror's default teaching scenario is named concaveReal.
-    // Always map the device selection to a valid preset instead of silently doing nothing.
-    const devicePresets={convex:"convex",concave:"concaveReal",plane:"plane",
-      slab:"slab",convexLens:"convexLens",concaveLens:"concaveLens"};
-    const preset=devicePresets[btn.dataset.val];
-    if(preset) applyPreset(preset);
-    return;
-  }
-  state[group.dataset.group]=btn.dataset.val;
-  state.selected=Math.min(1,state.count-1);
-  render();
-}));
+// Direct binding: every device button selects an explicit, known-good preset.
+// This deliberately avoids coupling the device selector to names of lesson variants.
+const devicePresets = Object.freeze({
+  convex:"convex",
+  concave:"concaveReal",
+  plane:"plane",
+  slab:"slab",
+  convexLens:"convexLens",
+  concaveLens:"concaveLens"
+});
+document.querySelectorAll('[data-group="mirror"] [data-val]').forEach(button=>{
+  button.addEventListener("click",()=>{
+    const preset=devicePresets[button.dataset.val];
+    if(!preset)return;
+    applyPreset(preset);
+  });
+});
+document.querySelectorAll('[data-group="source"] [data-val]').forEach(button=>{
+  button.addEventListener("click",()=>{
+    state.source=button.dataset.val;
+    state.selected=Math.min(1,state.count-1);
+    render();
+  });
+});
 document.querySelectorAll("[data-step]").forEach(btn=>btn.addEventListener("click",()=>{state.step=Number(btn.dataset.step);if(state.step===4)state.extension=true;render();}));
 document.querySelectorAll("[data-preset]").forEach(btn=>btn.addEventListener("click",()=>applyPreset(btn.dataset.preset)));
 for(const id of ["distance","height","radius","spread","count"]) $(id).addEventListener("input",e=>{
