@@ -39,9 +39,9 @@ window.LensOptics = (() => {
     if(sq<0)return null; // total internal reflection
     return unit(add(newTang,mul(n,Math.sqrt(sq))));
   }
-  function trace(s,source,targetY){
+  function trace(s,source,targetY,parallelDirection=null){
     const sh=shape(s),y=clamp(targetY,-HALF_HEIGHT+1,HALF_HEIGHT-1),P1={x:sh.left(y),y};
-    const I=source===null?{x:1,y:0}:unit(sub(P1,source));
+    const I=parallelDirection|| (source===null?{x:1,y:0}:unit(sub(P1,source)));
     if(I.x<=0)return null;
     const N1=unit({x:1,y:-sh.leftSlope(y)});
     const inside=refract(I,N1,1,s.refractiveIndex);
@@ -68,7 +68,9 @@ window.LensOptics = (() => {
   function rayAt(s,i){
     const targetY=-s.spread+(2*s.spread*i)/Math.max(1,s.count-1);
     const O=s.source==="parallel"?null:{x:-s.distance,y:s.height};
-    return trace(s,O,targetY);
+    const phi=(s.parallelAngle||0)*Math.PI/180;
+    const incident=s.source==="parallel"?unit({x:1,y:Math.tan(phi)}):null;
+    return trace(s,O,targetY,incident);
   }
   function intersection(a,b){
     if(!a||!b)return null;
@@ -151,7 +153,7 @@ window.LensOptics = (() => {
     }
     for(const r of display){
       const vivid=r===focused,opacity=vivid?1:.50;
-      const O=r.O||{x:-280,y:r.P.y};
+      const O=r.O||{x:-280,y:r.P.y-(r.P.x+280)*r.I.y/r.I.x};
       outSvg+=svgLine(point(O),point(r.P),inc,vivid?3.6:2.3,"",opacity);
       const halfway=add(O,mul(sub(r.P,O),.65)),tip=add(O,mul(sub(r.P,O),.77));
       outSvg+=svgLine(point(halfway),point(tip),inc,vivid?3.4:2.5,"",opacity,'marker-end="url(#incTip)"');
@@ -220,7 +222,7 @@ window.LensOptics = (() => {
     const device={slab:"平行玻璃板",convexLens:"凸透鏡",concaveLens:"凹透鏡"}[s.mirror];
     const parallel=s.source==="parallel";
     let outcome;
-    if(parallel) outcome=s.mirror==="slab"?"平行入射、平行出射（可能有側向位移）":
+    if(parallel) outcome=s.mirror==="slab"?(Math.abs(s.parallelAngle||0)>0.001?"斜向平行光：出射保持平行，產生側向位移":"垂直入射：出射方向不變"):
       s.mirror==="convexLens"?"平行光折射後近軸會聚":"平行光折射後發散，反向延長線指向虛焦點";
     else outcome=s.mirror==="slab"?"經玻璃板折射後，形成略向觀察者移動的虛像":
       t.kind==="infinity"?"出射光接近平行，像在遠方":
