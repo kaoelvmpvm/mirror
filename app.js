@@ -293,7 +293,7 @@ document.querySelectorAll("[data-group]").forEach(group=>group.addEventListener(
   const btn=e.target.closest("[data-val]");if(!btn)return;
   if(group.dataset.group==="mirror"){
     const value=btn.dataset.val;
-    applyPreset(value==="slab"?"slabPoint":value);
+    applyPreset(value);
     return;
   }
   state[group.dataset.group]=btn.dataset.val;state.selected=Math.min(1,state.count-1);
