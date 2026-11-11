@@ -8,3 +8,28 @@
 .stroke.inside{border-color:#7e78c5}
 .field[hidden]{display:none!important}
 @media(max-width:740px){.device-picker button{padding:11px 2px}#stepProcess{font-size:11px}}
+
+.lens-mode-panel{margin:14px 0 2px;padding:12px;border:1px solid #dfe9f5;border-radius:11px;background:#f8fbff}
+.lens-mode-panel[hidden],.textbook-cases[hidden],.textbook-overview[hidden]{display:none!important}
+.lens-mode-label{font-size:12px;font-weight:850;color:#3b5e88;margin-bottom:8px}
+.lens-mode-panel .seg button{font-size:11px;padding:9px 3px}
+.mode-help{font-size:10.5px;color:#8394ab;line-height:1.55;margin:8px 1px 0}
+.textbook-cases{margin:0 17px 12px;padding:12px;background:#f6f9fd;border:1px solid #e7edf7;border-radius:11px}
+.case-intro{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
+.case-intro strong{font-size:12.5px;color:#49647f}
+.overview-toggle{border:0;background:transparent;color:#2d70b8;font-size:12px;font-weight:800;text-decoration:underline;text-underline-offset:3px;padding:2px}
+.case-buttons{display:flex;flex-wrap:wrap;gap:6px}
+.case-buttons button{border:1px solid #dce7f2;background:#fff;border-radius:7px;color:#536b86;padding:8px 13px;font-size:12px;font-weight:750}
+.case-buttons button.active{background:#2869bc;border-color:#2869bc;color:#fff}
+.case-buttons button[hidden]{display:none}
+.textbook-overview{margin-top:15px;padding:18px 21px}
+.overview-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.overview-heading h3{font-size:17px;margin:5px 0 15px}
+.overview-heading p{font-size:12px;color:#8a98a8;margin:0 0 13px}
+.overview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.overview-case{text-align:left;border:1px solid #dfe8f1;background:#fff;border-radius:11px;padding:12px 12px 9px;overflow:hidden}
+.overview-case:hover{border-color:#86b6e9;background:#f9fcff}
+.overview-case-title{font-size:13px;font-weight:850;color:#365c81}
+.overview-case svg{display:block;width:100%;max-height:165px}
+.overview-case-desc{font-size:12px;color:#56788e;font-weight:800}
+@media(max-width:800px){.overview-grid{grid-template-columns:1fr}.overview-heading{align-items:flex-start;flex-direction:column}.case-buttons button{flex:1;white-space:nowrap}}
