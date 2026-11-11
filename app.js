@@ -220,7 +220,7 @@ function applyPreset(which){
     convex:["convex","point",165,34,140,18,2,true],
     convexParallel:["convex","parallel",165,34,140,20,2,true],
     concaveReal:["concave","point",170,34,140,18,2,false],
-    concaveFocus:["concave","point",70,34,140,12,2,false],
+    concaveFocus:["concave","point",70,12,140,8,2,false],
     concaveVirtual:["concave","point",47,24,140,12,2,true],
     plane:["plane","point",125,34,140,16,2,true]
   };
