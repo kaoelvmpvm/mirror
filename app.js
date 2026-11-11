@@ -293,12 +293,16 @@ $("reset").addEventListener("click",()=>{state.fc=true;state.angle=false;state.g
 document.querySelectorAll("[data-group]").forEach(group=>group.addEventListener("click",e=>{
   const btn=e.target.closest("[data-val]");if(!btn)return;
   if(group.dataset.group==="mirror"){
-    const value=btn.dataset.val;
-    applyPreset(value);
+    // The concave mirror's default teaching scenario is named concaveReal.
+    // Always map the device selection to a valid preset instead of silently doing nothing.
+    const devicePresets={convex:"convex",concave:"concaveReal",plane:"plane",
+      slab:"slab",convexLens:"convexLens",concaveLens:"concaveLens"};
+    const preset=devicePresets[btn.dataset.val];
+    if(preset) applyPreset(preset);
     return;
   }
-  state[group.dataset.group]=btn.dataset.val;state.selected=Math.min(1,state.count-1);
-  if(group.dataset.group==="mirror")state.extension=state.mirror!=="concave";
+  state[group.dataset.group]=btn.dataset.val;
+  state.selected=Math.min(1,state.count-1);
   render();
 }));
 document.querySelectorAll("[data-step]").forEach(btn=>btn.addEventListener("click",()=>{state.step=Number(btn.dataset.step);if(state.step===4)state.extension=true;render();}));
