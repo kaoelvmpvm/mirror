@@ -6,9 +6,10 @@
   <meta name="theme-color" content="#f5f7fb">
   <meta name="description" content="用反射與折射定律理解平面鏡、球面鏡、玻璃板與透鏡的光路成像。">
   <title>反射與折射光路實驗室</title>
-  <link rel="stylesheet" href="./style.css?v=20261112-2">
+  <link rel="stylesheet" href="./style.css?v=20261112-3">
   <script src="./lens.js?v=20261112-2" defer></script>
-  <script src="./app.js?v=20261112-2" defer></script>
+  <script src="./textbook.js?v=20261112-3" defer></script>
+  <script src="./app.js?v=20261112-3" defer></script>
 </head>
 <body>
 <div class="shell">
@@ -20,12 +21,17 @@
     <aside class="sidebar">
       <section class="section"><div class="section-title"><span>01</span><h2>選擇光學器材</h2></div>
         <div class="seg device-picker" data-group="mirror"><button data-val="convex" class="active">凸面鏡</button><button data-val="concave">凹面鏡</button><button data-val="plane">平面鏡</button><button data-val="slab" title="平行玻璃板">平面透鏡</button><button data-val="convexLens">凸透鏡</button><button data-val="concaveLens">凹透鏡</button></div><p class="device-note" id="deviceNote">目前：鏡面反射</p>
+       <div id="lensModePanel" class="lens-mode-panel" hidden>
+        <div class="lens-mode-label">透鏡顯示方式</div>
+        <div class="seg"><button id="textbookModeBtn" class="active">課本成像作圖</button><button id="snellModeBtn">實際折射光路</button></div>
+        <p class="mode-help">課本模式用 F、2F 與兩條特殊光線；實際模式顯示光在材料內的兩次折射。</p>
+       </div>
       </section>
       <section class="section"><div class="section-title"><span>02</span><h2>光線來源</h2></div>
         <div class="seg" data-group="source"><button data-val="point" class="active">物體頂端</button><button data-val="parallel">平行光束</button></div>
       </section>
       <section class="section"><div class="section-title"><span>03</span><h2>調整條件</h2></div>
-        <div class="field" id="distanceField"><label for="distance">物距 <output id="distanceValue">165 cm</output></label><input id="distance" type="range" min="30" max="300" step="1" value="165"></div>
+        <div class="field" id="distanceField"><label for="distance">物距 <output id="distanceValue">165 cm</output></label><input id="distance" type="range" min="30" max="500" step="1" value="165"></div>
         <div class="field" id="heightField"><label for="height">物體高度 <output id="heightValue">34 cm</output></label><input id="height" type="range" min="10" max="55" step="1" value="34"></div>
         <div class="field" id="radiusField"><label for="radius">曲率半徑 <output id="radiusValue">140 cm</output></label><input id="radius" type="range" min="80" max="200" step="2" value="140"></div>
         <div class="field" id="parallelAngleField"><label for="parallelAngle">平行光入射傾角 <output id="parallelAngleValue">0°</output></label><input id="parallelAngle" type="range" min="-25" max="25" step="1" value="0"></div>
@@ -34,10 +40,10 @@
         <div class="field"><label for="count">光線數量 <output id="countValue">2 條</output></label><input id="count" type="range" min="2" max="5" step="1" value="2"></div>
       </section>
       <section class="section"><div class="section-title"><span>04</span><h2>圖面顯示</h2></div>
-        <label class="toggle"><input id="normalToggle" type="checkbox" checked><span>選定光線的法線</span></label>
+        <label class="toggle" id="normalRow"><input id="normalToggle" type="checkbox" checked><span>選定光線的法線</span></label>
         <label class="toggle"><input id="extensionToggle" type="checkbox" checked><span id="extensionLabel">反射光反向延長線</span></label>
         <label class="toggle"><input id="fcToggle" type="checkbox" checked><span id="focalLabel">焦點 F／曲率中心 C</span></label>
-        <label class="toggle"><input id="angleToggle" type="checkbox"><span>圖中角度弧線</span></label>
+        <label class="toggle" id="angleRow"><input id="angleToggle" type="checkbox"><span>圖中角度弧線</span></label>
         <label class="toggle"><input id="gridToggle" type="checkbox"><span>淡色輔助格線</span></label>
         <div class="focus-box"><label class="toggle"><input id="soloToggle" type="checkbox"><span><strong>只觀察一條光線</strong></span></label><label class="focus-label" for="focusRay">正在觀察</label><select id="focusRay" aria-label="選擇要觀察的光線"></select></div>
       </section>
@@ -48,7 +54,13 @@
     <main class="main">
       <section class="stage card">
         <div class="stage-top"><div><div class="stage-eyebrow">光路觀察區</div><h2 id="sceneTitle">凸面鏡：正立縮小的虛像</h2></div><span class="small-pill" id="stageCount">2 條光線</span></div>
-        <div class="stepbar" role="group" aria-label="光路教學步驟">
+        <div id="textbookCases" class="textbook-cases" hidden>
+  <div class="case-intro"><strong>課本物距情境</strong><button id="overviewToggle" class="overview-toggle">查看全部成像對照</button></div>
+  <div class="case-buttons">
+    <button data-case="far">2F 外</button><button data-case="at2f">2F 上</button><button data-case="between">F～2F</button><button data-case="atf">F 上</button><button data-case="inside">F 內</button><button data-case="concaveAny">凹透鏡・任意位置</button>
+  </div>
+ </div>
+ <div class="stepbar" role="group" aria-label="光路教學步驟">
           <button class="step" data-step="1"><span>01</span>入射</button><button class="step" data-step="2"><span>02</span>法線</button><button class="step" data-step="3"><span>03</span><span id="stepProcess">反射</span></button><button class="step" data-step="4"><span>04</span>延長</button><button class="step active" data-step="5"><span>05</span>成像</button>
         </div>
         <div class="plot"><svg id="scene" viewBox="0 0 1000 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="可互動的反射與折射光線示意圖"></svg></div>
@@ -58,7 +70,11 @@
         <div class="readout card"><div class="readout-title">目前步驟 <span id="stepIndex">05 / 05</span></div><h3 id="stepHeading">尋找像的位置</h3><p id="stepDescription"></p><div class="callout" id="physicsNote"></div></div>
         <div class="inspector card"><div class="readout-title">數值觀察 <span>以法線為基準</span></div><div class="angle-row"><div><small>入射角 θᵢ</small><strong id="angleIn">—</strong></div><span class="equals" id="angleRelation">＝</span><div><small id="outputAngleLabel">反射角 θᵣ</small><strong id="angleOut">—</strong></div></div><div class="metrics"><div><small id="focalMetricLabel">焦距</small><b id="focalResult">—</b></div><div><small>像距</small><b id="imageDistance">—</b></div></div><div class="image-status"><span id="imageTag">虛像</span><p id="imageDescription"></p></div></div>
       </section>
-      <p class="footer-note" id="footnote">鏡面使用反射定律、透鏡使用兩介面的司乃耳折射定律；焦點與成像位置以近軸光線估計。遠離主軸時可能出現球面像差。｜版本 2026.11.12.2</p>
+      <section id="textbookOverview" class="textbook-overview card" hidden>
+  <div class="overview-heading"><div><div class="stage-eyebrow">TEXTBOOK COMPARISON</div><h3>課本成像情境總覽</h3></div><p>點選任一情境可切換回上方互動作圖</p></div>
+  <div id="overviewGrid" class="overview-grid"></div>
+ </section>
+ <p class="footer-note" id="footnote">鏡面使用反射定律、透鏡使用兩介面的司乃耳折射定律；焦點與成像位置以近軸光線估計。遠離主軸時可能出現球面像差。｜版本 2026.11.12.2</p>
     </main>
   </div>
 </div>
