@@ -54,7 +54,7 @@ function make(state,{mini=false,idPrefix="main"}={}){
  let out=markers+'<rect width="1000" height="540" fill="white"/>';
  if(state.grid&&!mini)out+='<path d="'+Array.from({length:25},(_,i)=>'M'+(i*40)+' 20V520').join(" ")+Array.from({length:14},(_,i)=>'M20 '+(i*40)+'H980').join(" ")+'" stroke="#ebf0f7" stroke-width="1" fill="none"/>';
  out+=line(leftMost,rightMost,color.axis,1.6,"8 7",.88);
- if(state.fc){
+ if(state.fc&&state.step>=2){
   const positions=[[-2*absf,"2F"],[-absf,"F"],[absf,"F′"],[2*absf,"2F′"]];
   for(const [x,term] of positions){
    const p=origin(x,0);
