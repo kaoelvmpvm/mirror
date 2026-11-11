@@ -5,7 +5,7 @@ const W = 1000, H = 540, AY = 277;
 let MX = 632;
 const $ = id => document.getElementById(id);
 const state = { mirror:"convex", source:"point", distance:165, height:34, radius:140, spread:18, count:2,
-  refractiveIndex:1.50, selected:1, step:5, normal:true, extension:true, fc:true, angle:false, grid:false, solo:false };
+  refractiveIndex:1.50, parallelAngle:0, selected:1, step:5, normal:true, extension:true, fc:true, angle:false, grid:false, solo:false };
 const palettes = { incident:"#df9b37", reflected:"#2878c6", normal:"#129f8e", extended:"#d777a0", image:"#168c82" };
 const names = { convex:"凸面鏡", concave:"凹面鏡", plane:"平面鏡" };
 const isLens = () => window.LensOptics.isLens(state);
@@ -215,6 +215,9 @@ function updateControls(){
   $("deviceNote").textContent=lens?(state.mirror==="slab"?"玻璃板：兩面折射，沒有會聚能力":"透鏡：光線經過兩個界面時折射"):"鏡面：光線在表面反射";
   $("footnote").textContent=lens?"依司乃耳定律追跡入射、玻璃內及出射光線（不計表面反射）；焦點與像點由近軸光線估算。":"依鏡面反射定律追跡光線；焦距及成像位置以近軸近似標示，較遠離主軸時可能出現球面像差。";
   $("indexField").hidden=!lens;
+  $("parallelAngleField").hidden=!lens||state.source!=="parallel";
+  $("parallelAngle").value=state.parallelAngle;
+  $("parallelAngleValue").textContent=state.parallelAngle+"°";
   $("radiusField").hidden=state.mirror==="slab";
   $("refractiveIndex").value=state.refractiveIndex;
   $("refractiveIndexValue").textContent=state.refractiveIndex.toFixed(2);
@@ -248,8 +251,8 @@ function applyPreset(which){
     concaveFocus:["concave","point",70,12,140,8,2,false],
     concaveVirtual:["concave","point",47,24,140,12,2,true],
     plane:["plane","point",125,34,140,16,2,true],
-    slab:["slab","parallel",165,34,140,18,2,false],
-    slabPoint:["slab","point",165,34,140,18,2,true],
+    slab:["slab","parallel",165,34,140,18,2,false,20],
+    slabPoint:["slab","point",165,34,140,18,2,true,0],
     convexLens:["convexLens","point",210,30,110,18,2,false],
     convexLensParallel:["convexLens","parallel",210,30,110,18,2,false],
     concaveLens:["concaveLens","point",160,30,110,18,2,true],
@@ -257,6 +260,7 @@ function applyPreset(which){
   };
   const p=presets[which];if(!p)return;
   [state.mirror,state.source,state.distance,state.height,state.radius,state.spread,state.count,state.extension]=p;
+  state.parallelAngle=p.length>8?p[8]:0;
   state.step=5;state.selected=1;state.solo=false;state.normal=true;render();
 }
 function download(blob,file){
@@ -302,6 +306,7 @@ for(const id of ["distance","height","radius","spread","count"]) $(id).addEventL
   state[id]=Number(e.target.value);state.selected=clamp(state.selected,0,state.count-1);render();
 });
 $("refractiveIndex").addEventListener("input",e=>{state.refractiveIndex=Number(e.target.value);render();});
+$("parallelAngle").addEventListener("input",e=>{state.parallelAngle=Number(e.target.value);render();});
 for(const key of ["normal","extension","fc","angle","grid","solo"]) $(key+"Toggle").addEventListener("change",e=>{state[key]=e.target.checked;render();});
 $("focusRay").addEventListener("change",e=>{state.selected=Number(e.target.value);render();});
 const svg=$("scene");
