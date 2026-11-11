@@ -5,10 +5,11 @@ const W = 1000, H = 540, AY = 277;
 let MX = 632;
 const $ = id => document.getElementById(id);
 const state = { mirror:"convex", source:"point", distance:165, height:34, radius:140, spread:18, count:2,
-  refractiveIndex:1.50, parallelAngle:0, selected:1, step:5, normal:true, extension:true, fc:true, angle:false, grid:false, solo:false };
+  refractiveIndex:1.50, parallelAngle:0, lessonMode:false, textbookCase:"far", overviewOpen:false, selected:1, step:5, normal:true, extension:true, fc:true, angle:false, grid:false, solo:false };
 const palettes = { incident:"#df9b37", reflected:"#2878c6", normal:"#129f8e", extended:"#d777a0", image:"#168c82" };
 const names = { convex:"凸面鏡", concave:"凹面鏡", plane:"平面鏡" };
 const isLens = () => window.LensOptics.isLens(state);
+const isTextbook = () => (state.mirror==="convexLens"||state.mirror==="concaveLens")&&state.lessonMode;
 const clamp = (v,a,b) => Math.min(b,Math.max(a,v));
 const add = (a,b) => ({x:a.x+b.x,y:a.y+b.y});
 const mul = (a,t) => ({x:a.x*t,y:a.y*t});
@@ -98,6 +99,13 @@ function drawExtension(ray,focus){
   return seg(start,end,palettes.extended,focus?2.5:1.8,"6 8",focus?.77:.4);
 }
 function computeSvg(){
+  if(isTextbook()){
+    const v=window.TextbookOptics.make(state);
+    MX=v.center;scale=v.scale;
+    $("scene").innerHTML=v.svg;
+    window.TextbookOptics.describe(state,$);
+    return;
+  }
   scale=visibleWorldScale();
   if(isLens()){
     const result=window.LensOptics.draw(state,{W,H,MX,AY,defs});
@@ -205,18 +213,32 @@ function updateResults(t,ray){
   document.querySelectorAll(".step").forEach(btn=>{btn.classList.toggle("active",Number(btn.dataset.step)===state.step);btn.setAttribute("aria-pressed",String(Number(btn.dataset.step)===state.step));});
 }
 function updateControls(){
-  const lens=isLens();
+  const lens=isLens(),textbook=isTextbook();
+  $("lensModePanel").hidden=!(state.mirror==="convexLens"||state.mirror==="concaveLens");
+  $("textbookCases").hidden=!textbook;
+  $("textbookOverview").hidden=!textbook||!state.overviewOpen;
+  $("sourceSection").hidden=textbook;
+  $("spreadField").hidden=textbook;$("countField").hidden=textbook;
+  $("normalRow").hidden=textbook;$("angleRow").hidden=textbook;
+  $("textbookModeBtn").classList.toggle("active",textbook);
+  $("snellModeBtn").classList.toggle("active",!textbook);
+  document.querySelectorAll("[data-case]").forEach(btn=>{
+    btn.hidden=state.mirror==="concaveLens"?btn.dataset.case!=="concaveAny":btn.dataset.case==="concaveAny";
+    btn.classList.toggle("active",textbook&&state.textbookCase===btn.dataset.case);
+  });
+  $("overviewToggle").textContent=state.overviewOpen?"收合全部成像對照":"查看全部成像對照";
+  if(textbook&&state.overviewOpen)$("overviewGrid").innerHTML=window.TextbookOptics.overview(state);
   $("stepProcess").textContent=lens?"折射":"反射";
   $("rayLabel").textContent=lens?"折射":"反射";
   $("insideLegend").hidden=!lens;
   $("angleRelation").textContent=lens?"→":"＝";
   $("outputAngleLabel").textContent=lens?"折射角 θₜ":"反射角 θᵣ";
   $("extensionLabel").textContent=lens?"出射光反向延長線":"反射光反向延長線";
-  $("focalLabel").textContent=lens?"焦點 F／F′":"焦點 F／曲率中心 C";
-  $("deviceNote").textContent=lens?(state.mirror==="slab"?"玻璃板：兩面折射，沒有會聚能力":"透鏡：光線經過兩個界面時折射"):"鏡面：光線在表面反射";
-  $("footnote").textContent=lens?"依司乃耳定律追跡入射、玻璃內及出射光線（不計表面反射）；焦點與像點由近軸光線估算。":"依鏡面反射定律追跡光線；焦距及成像位置以近軸近似標示，較遠離主軸時可能出現球面像差。";
+  $("focalLabel").textContent=textbook?"焦點 F／2F":lens?"焦點 F／F′":"焦點 F／曲率中心 C";
+  $("deviceNote").textContent=textbook?"教材成像：兩條特殊光線＋F 與 2F":lens?(state.mirror==="slab"?"玻璃板：兩面折射，沒有會聚能力":"透鏡：光線經過兩個界面時折射"):"鏡面：光線在表面反射";
+  $("footnote").textContent=textbook?"課本模式使用理想薄透鏡近軸作圖：一條平行主軸、一條通過光學中心；不追蹤玻璃內部的折射路徑。":lens?"依司乃耳定律追跡入射、玻璃內及出射光線（不計表面反射）；焦點與像點由近軸光線估算。":"依鏡面反射定律追跡光線；焦距及成像位置以近軸近似標示，較遠離主軸時可能出現球面像差。";
   $("indexField").hidden=!lens;
-  $("parallelAngleField").hidden=!lens||state.source!=="parallel";
+  $("parallelAngleField").hidden=!lens||state.source!=="parallel"||textbook;
   $("parallelAngle").value=state.parallelAngle;
   $("parallelAngleValue").textContent=state.parallelAngle+"°";
   $("radiusField").hidden=state.mirror==="slab";
@@ -237,13 +259,14 @@ function updateControls(){
   for(const key of ["normal","extension","fc","angle","grid","solo"]) $(key+"Toggle").checked=state[key];
   const raySelect=$("focusRay"),old=raySelect.value;
   raySelect.innerHTML=Array.from({length:state.count},(_,i)=>{
+    if(textbook)return '<option value="'+i+'">'+(i===0?"平行主軸的光線":"通過光學中心的光線")+'</option>';
     const name=state.count===2?(i===0?"下方":"上方"):(i===0?"下方":i===state.count-1?"上方":"中間 "+i);
     return '<option value="'+i+'">第 '+(i+1)+' 條（'+name+'）</option>';
   }).join("");
   state.selected=clamp(state.selected,0,state.count-1);
   raySelect.value=String(state.selected);
 }
-function render(){MX=isLens()?485:632;updateControls();computeSvg();}
+function render(){MX=isTextbook()?500:isLens()?485:632;updateControls();computeSvg();}
 function applyPreset(which){
   const presets={
     convex:["convex","point",165,34,140,18,2,true],
@@ -262,6 +285,10 @@ function applyPreset(which){
   const p=presets[which];if(!p)return;
   [state.mirror,state.source,state.distance,state.height,state.radius,state.spread,state.count,state.extension]=p;
   state.parallelAngle=p.length>8?p[8]:0;
+  state.lessonMode=(state.mirror==="convexLens"||state.mirror==="concaveLens")&&state.source==="point";
+  if(state.lessonMode)window.TextbookOptics.applyCase(state,state.mirror==="concaveLens"?"concaveAny":"between");
+  else state.textbookCase="";
+  state.overviewOpen=false;
   state.step=5;state.selected=1;state.solo=false;state.normal=true;render();
 }
 function download(blob,file){
@@ -310,14 +337,30 @@ document.querySelectorAll('[data-group="mirror"] [data-val]').forEach(button=>{
 document.querySelectorAll('[data-group="source"] [data-val]').forEach(button=>{
   button.addEventListener("click",()=>{
     state.source=button.dataset.val;
+    if(state.source==="parallel")state.lessonMode=false;
     state.selected=Math.min(1,state.count-1);
     render();
   });
 });
 document.querySelectorAll("[data-step]").forEach(btn=>btn.addEventListener("click",()=>{state.step=Number(btn.dataset.step);if(state.step===4)state.extension=true;render();}));
 document.querySelectorAll("[data-preset]").forEach(btn=>btn.addEventListener("click",()=>applyPreset(btn.dataset.preset)));
+$("textbookModeBtn").addEventListener("click",()=>{
+  const next=state.mirror==="concaveLens"?"concaveAny":state.textbookCase&&["far","at2f","between","atf","inside"].includes(state.textbookCase)?state.textbookCase:"far";
+  window.TextbookOptics.applyCase(state,next);render();
+});
+$("snellModeBtn").addEventListener("click",()=>{state.lessonMode=false;state.source="point";render();});
+document.querySelectorAll("[data-case]").forEach(btn=>btn.addEventListener("click",()=>{
+  window.TextbookOptics.applyCase(state,btn.dataset.case);render();
+}));
+$("overviewToggle").addEventListener("click",()=>{state.overviewOpen=!state.overviewOpen;render();});
+$("overviewGrid").addEventListener("click",event=>{
+  const target=event.target.closest("[data-overview]");
+  if(!target)return;
+  window.TextbookOptics.applyCase(state,target.dataset.overview);state.overviewOpen=false;render();
+  document.querySelector(".stage").scrollIntoView({behavior:"smooth",block:"start"});
+});
 for(const id of ["distance","height","radius","spread","count"]) $(id).addEventListener("input",e=>{
-  state[id]=Number(e.target.value);state.selected=clamp(state.selected,0,state.count-1);render();
+  state[id]=Number(e.target.value);if(isTextbook())state.textbookCase="custom";state.selected=clamp(state.selected,0,state.count-1);render();
 });
 $("refractiveIndex").addEventListener("input",e=>{state.refractiveIndex=Number(e.target.value);render();});
 $("parallelAngle").addEventListener("input",e=>{state.parallelAngle=Number(e.target.value);render();});
@@ -329,8 +372,9 @@ function moveObject(event){
   const bounds=svg.getBoundingClientRect();
   const x=(event.clientX-bounds.left)*W/bounds.width;
   const y=(event.clientY-bounds.top)*H/bounds.height;
-  state.distance=Math.round(clamp((MX-x)/scale,30,300));
-  state.height=Math.round(clamp((AY-y)/scale,10,55));
+  state.distance=Math.round(clamp((MX-x)/scale,30,500));
+  state.height=Math.round(clamp(((isTextbook()?270:AY)-y)/scale,10,55));
+  if(isTextbook())state.textbookCase="custom";
   render();
 }
 svg.addEventListener("pointerdown",event=>{
@@ -342,6 +386,17 @@ svg.addEventListener("pointerdown",event=>{
   const matrix=svg.getScreenCTM();if(!matrix)return;
   const where=point.matrixTransform(matrix.inverse());
   // Clicking near a ray switches the highlighted ray without changing its path.
+  if(isTextbook()){
+    const u=state.distance,h=state.height,th=window.TextbookOptics.imageProperties(state);
+    const pt=(a,b)=>({x:MX+a*scale,y:270-b*scale});
+    const object=pt(-u,h),p=pt(0,h),center=pt(0,0),endX=480/scale;
+    const end1=pt(endX,h-h/th.f*endX),end2=pt(endX,-h/u*endX);
+    const parts=[[object,p],[object,center],[p,end1],[center,end2]];
+    const distances=parts.map(pair=>distanceToSegment(where,pair[0],pair[1]));
+    const idx=distances.indexOf(Math.min(...distances));
+    if(distances[idx]<15){state.selected=idx===0||idx===2?0:1;render();}
+    return;
+  }
   const rays=Array.from({length:state.count},(_,i)=>rayAt(i));
   let best=Infinity,index=-1;
   rays.forEach((r,i)=>{
