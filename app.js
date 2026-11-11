@@ -230,7 +230,9 @@ function updateControls(){
   if(textbook&&state.overviewOpen)$("overviewGrid").innerHTML=window.TextbookOptics.overview(state);
   $("stepProcess").textContent=lens?"折射":"反射";
   $("rayLabel").textContent=lens?"折射":"反射";
-  $("insideLegend").hidden=!lens;
+  $("insideLegend").hidden=!lens||textbook;
+  $("angleReadout").hidden=textbook;
+  $("angleMetricHint").textContent=textbook?"理想薄透鏡作圖":"以法線為基準";
   $("angleRelation").textContent=lens?"→":"＝";
   $("outputAngleLabel").textContent=lens?"折射角 θₜ":"反射角 θᵣ";
   $("extensionLabel").textContent=lens?"出射光反向延長線":"反射光反向延長線";
