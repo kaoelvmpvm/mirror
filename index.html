@@ -27,7 +27,7 @@
         <p class="mode-help">課本模式用 F、2F 與兩條特殊光線；實際模式顯示光在材料內的兩次折射。</p>
        </div>
       </section>
-      <section class="section"><div class="section-title"><span>02</span><h2>光線來源</h2></div>
+      <section class="section" id="sourceSection"><div class="section-title"><span>02</span><h2>光線來源</h2></div>
         <div class="seg" data-group="source"><button data-val="point" class="active">物體頂端</button><button data-val="parallel">平行光束</button></div>
       </section>
       <section class="section"><div class="section-title"><span>03</span><h2>調整條件</h2></div>
@@ -36,8 +36,8 @@
         <div class="field" id="radiusField"><label for="radius">曲率半徑 <output id="radiusValue">140 cm</output></label><input id="radius" type="range" min="80" max="200" step="2" value="140"></div>
         <div class="field" id="parallelAngleField"><label for="parallelAngle">平行光入射傾角 <output id="parallelAngleValue">0°</output></label><input id="parallelAngle" type="range" min="-25" max="25" step="1" value="0"></div>
         <div class="field" id="indexField"><label for="refractiveIndex">材料折射率 n <output id="refractiveIndexValue">1.50</output></label><input id="refractiveIndex" type="range" min="1.30" max="1.80" step="0.01" value="1.50"></div>
-        <div class="field"><label for="spread">入射點分布 <output id="spreadValue">± 18 cm</output></label><input id="spread" type="range" min="6" max="38" step="1" value="18"></div>
-        <div class="field"><label for="count">光線數量 <output id="countValue">2 條</output></label><input id="count" type="range" min="2" max="5" step="1" value="2"></div>
+        <div class="field" id="spreadField"><label for="spread">入射點分布 <output id="spreadValue">± 18 cm</output></label><input id="spread" type="range" min="6" max="38" step="1" value="18"></div>
+        <div class="field" id="countField"><label for="count">光線數量 <output id="countValue">2 條</output></label><input id="count" type="range" min="2" max="5" step="1" value="2"></div>
       </section>
       <section class="section"><div class="section-title"><span>04</span><h2>圖面顯示</h2></div>
         <label class="toggle" id="normalRow"><input id="normalToggle" type="checkbox" checked><span>選定光線的法線</span></label>
