@@ -133,6 +133,15 @@ function make(state,{mini=false,idPrefix="main"}={}){
  out=out.replace(/\b(?:textbookMask|tbIn|tbOut|tbObj|tbImg)\b/g,match=>match+"-"+safePrefix);
  return {svg:out,properties:th,scale,center,axis};
 }
+function positionLabel(state,r){
+ if(r.kind==="infinity")return "像在無限遠";
+ if(state.mirror==="concaveLens")return "與物體同側，位於物體與透鏡之間";
+ if(r.kind==="virtual")return "與物體同側，位於物體外側";
+ const a=r.u/Math.abs(r.f);
+ if(a>2.01)return "異側 F′～2F′ 之間";
+ if(Math.abs(a-2)<.01)return "異側 2F′ 上";
+ return "異側 2F′ 外";
+}
 function describe(state,$){
  const r=imageProperties(state),type=state.mirror==="convexLens"?"凸透鏡":"凹透鏡";
  const word=r.kind==="infinity"?"平行出射、像在無限遠":
@@ -146,7 +155,7 @@ function describe(state,$){
  $("focalResult").textContent=fmt(Math.abs(r.f))+" cm";
  $("imageDistance").textContent=fmt(r.v)+" cm";
  $("imageTag").textContent=r.kind==="infinity"?"無限遠":r.kind==="real"?"實像":"虛像";
- $("imageDescription").textContent=word+(size?"、"+size:"")+(r.kind==="infinity"?"":("；倍率約 "+fmt(Math.abs(r.m))+" 倍。"));
+ $("imageDescription").textContent=word+(size?"、"+size:"")+"；成像位置："+positionLabel(state,r)+(r.kind==="infinity"?"。":"；倍率約 "+fmt(Math.abs(r.m))+" 倍。");
  $("stepIndex").textContent=String(state.step).padStart(2,"0")+" / 05";
  const title=["","畫出兩條入射光線","標示透鏡與焦點","畫出折射後光路","反向延長虛像光線","找出像的位置"];
  const descriptions=[
@@ -187,7 +196,7 @@ function overview(state){
   const size=t.kind==="infinity"?"":Math.abs(t.m)<.96?"・縮小":Math.abs(t.m)>1.04?"・放大":"・等大";
   return '<button class="overview-case" data-overview="'+c.key+'"><div class="overview-case-title">'+c.title+'</div>'+
     '<svg viewBox="0 105 1000 325" role="img" aria-label="'+c.title+'光路作圖">'+geom.svg+'</svg>'+
-    '<div class="overview-case-desc">'+kind+size+'</div></button>';
+    '<div class="overview-case-desc">'+kind+size+'</div><div class="overview-case-position">成像位置：'+positionLabel(copy,t)+'</div></button>';
  }).join("");
 }
 return {focus,imageProperties,make,describe,applyCase,overview,caseDefs};
