@@ -179,6 +179,7 @@ function updateResults(t,ray){
   $("stageCount").textContent=state.solo?"單線觀察":state.count+" 條光線";
   $("angleIn").textContent=fmt(ray.angle)+"°";
   $("angleOut").textContent=fmt(ray.angle)+"°";
+  $("focalMetricLabel").textContent="焦距";
   $("focalResult").textContent=t.f===null?"∞":fmt(t.f)+" cm";
   $("imageDistance").textContent=!hasObject?"—":fmt(t.v)+" cm";
   $("imageTag").textContent=t.kind==="parallel"?"平行光":t.kind==="infinity"?"遠方成像":t.kind==="real"?"實像":"虛像";
