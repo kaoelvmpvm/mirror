@@ -260,7 +260,7 @@ document.querySelectorAll("[data-group]").forEach(group=>group.addEventListener(
   if(group.dataset.group==="mirror")state.extension=state.mirror!=="concave";
   render();
 }));
-document.querySelectorAll("[data-step]").forEach(btn=>btn.addEventListener("click",()=>{state.step=Number(btn.dataset.step);render();}));
+document.querySelectorAll("[data-step]").forEach(btn=>btn.addEventListener("click",()=>{state.step=Number(btn.dataset.step);if(state.step===4)state.extension=true;render();}));
 document.querySelectorAll("[data-preset]").forEach(btn=>btn.addEventListener("click",()=>applyPreset(btn.dataset.preset)));
 for(const id of ["distance","height","radius","spread","count"]) $(id).addEventListener("input",e=>{
   state[id]=Number(e.target.value);state.selected=clamp(state.selected,0,state.count-1);render();
@@ -291,6 +291,12 @@ svg.addEventListener("pointerdown",event=>{
   rays.forEach((r,i)=>{
     const p=sp(r.P),o=sp(r.O);
     const d=distanceToSegment(where,o,p);
+    if(d<best){best=d;index=i;}
+  });
+  // Permit selecting either the incoming or the reflected segment.
+  rays.forEach((r,i)=>{
+    const a=sp(r.P),b=sp(add(r.P,mul(r.R,245)));
+    const d=distanceToSegment(where,a,b);
     if(d<best){best=d;index=i;}
   });
   if(best<17&&index>=0){state.selected=index;render();}
