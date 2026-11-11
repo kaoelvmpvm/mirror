@@ -18,7 +18,7 @@ window.LensOptics = (() => {
   function shape(s){
     const R=s.radius,sg=y=>R-Math.sqrt(Math.max(0,R*R-y*y));
     const derivative=y=>y/Math.sqrt(Math.max(.0001,R*R-y*y));
-    if(s.mirror==="slab")return {half:HALF_HEIGHT,thick:22,left:y=>-11,right:y=>11,
+    if(s.mirror==="slab")return {half:HALF_HEIGHT,thick:42,left:y=>-21,right:y=>21,
       leftSlope:y=>0,rightSlope:y=>0};
     if(s.mirror==="convexLens"){
       const thick=2*sg(HALF_HEIGHT)+10;
@@ -232,7 +232,16 @@ window.LensOptics = (() => {
     $("stageCount").textContent=s.solo?"單線觀察":s.count+" 條光線";
     $("angleIn").textContent=r?fmt(r.angle)+"°":"—";
     $("angleOut").textContent=r?fmt(r.thetaGlass)+"°":"—";
-    $("focalResult").textContent=t.f===null?"∞":fmt(t.f)+" cm";
+    if(s.mirror==="slab"&&parallel&&r){
+      const slope=r.I.y/r.I.x;
+      const straightY=r.P.y+(r.P2.x-r.P.x)*slope;
+      const lateral=Math.abs(r.P2.y-straightY)/Math.sqrt(1+slope*slope);
+      $("focalMetricLabel").textContent="側向位移";
+      $("focalResult").textContent=fmt(lateral)+" cm";
+    }else{
+      $("focalMetricLabel").textContent="焦距";
+      $("focalResult").textContent=t.f===null?"∞":fmt(t.f)+" cm";
+    }
     $("imageDistance").textContent=parallel?"—":Number.isFinite(t.v)?fmt(t.v)+" cm":"∞";
     $("imageTag").textContent=parallel?"平行光":t.kind==="infinity"?"遠方成像":t.kind==="real"?"實像":"虛像";
     $("imageDescription").textContent=outcome+(parallel?"":Number.isFinite(t.m)?"；倍率約 "+fmt(Math.abs(t.m))+" 倍。":"。");
