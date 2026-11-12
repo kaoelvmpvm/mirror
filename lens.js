@@ -109,12 +109,11 @@ window.LensOptics = (() => {
     return {f,v:p.x,m:p.y/s.height,kind:p.x>sh.right(0)?"real":"virtual",img:p};
   }
   function scale(s,theo){
-    const sh=shape(s);
-    const left=Math.max(s.source==="parallel"?280:s.distance,
-      Number.isFinite(theo.v)&&theo.v<0?-theo.v:0,sh.thick/2+10,70);
-    const right=Math.max(Number.isFinite(theo.v)&&theo.v>0&&theo.v<680?theo.v:0,
-      theo.f&&theo.f>0&&theo.f<300?theo.f:0,85);
-    return Math.min(2.05,430/left,430/right);
+    // 固定光學座標系：像距、物距、平行／點光源皆不應驅動縮放。
+    // 左側固定 450px 視窗容納物距滑桿的最大 500cm；
+    // 透鏡中心、主軸、焦點位置只由真正光學參數決定。
+    // 保留參數，供現有繪圖函式與滑鼠拖曳統一使用。
+    return 0.86;
   }
   const svgLine=(a,b,c,w=2,dash="",opacity=1,attrs="")=>
     '<line x1="'+val(a.x)+'" y1="'+val(a.y)+'" x2="'+val(b.x)+'" y2="'+val(b.y)+'" stroke="'+c+
