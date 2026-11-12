@@ -34,9 +34,11 @@ function make(state,{mini=false,idPrefix="main"}={}){
  const th=imageProperties(state);
  const {u,f,v,m}=th,absf=Math.abs(f);
  const center=500,axis=mini?245:270;
- const maxLeft=Math.max(u,2*absf,Number.isFinite(v)&&v<0?-v:0);
- const maxRight=Math.max(2*absf,Number.isFinite(v)&&v>0?v:0);
- const scale=Math.min(1.9, 420/Math.max(1,maxLeft),420/Math.max(1,maxRight));
+ // 教材模式採固定比例尺：物距與像距變動不得重新縮放主軸、透鏡或 F/2F。
+ // 只依器材焦距與滑桿的固定可用物距範圍設定比例；物距拉到 500 cm 仍在畫布內。
+ // 光學參數（曲率、折射率）改變時，F/2F 才允許依真正焦距重新定位。
+ const maxObjectDistance=500;
+ const scale=Math.min(1.9,420/Math.max(maxObjectDistance,2*absf));
  const origin=(x,y)=>point({x,y},center,axis,scale);
  const object=origin(-u,state.height),base=origin(-u,0),middle=origin(0,0),pass=origin(0,state.height);
  const leftMost={x:20,y:axis},rightMost={x:980,y:axis};
@@ -115,6 +117,9 @@ function make(state,{mini=false,idPrefix="main"}={}){
  out+='<circle cx="'+object.x.toFixed(2)+'" cy="'+object.y.toFixed(2)+'" r="4.3" fill="#fff" stroke="'+color.obj+'" stroke-width="2"/>';
  out+='<circle cx="'+object.x.toFixed(2)+'" cy="'+object.y.toFixed(2)+'" r="22" fill="transparent" data-drag="1" style="cursor:grab"/>';
  if(!mini)out+=txt(object.x-10,object.y-12,"物體",'text-anchor="end" font-size="14" font-weight="700" fill="#976627"');
+ if(state.step>=5&&th.kind!=="infinity"&&th.image&&!actualImage&&!mini&&!state.solo){
+  out+=txt(951,65,"像超出畫面，請參考下方像距",'font-size="13" text-anchor="end" fill="#58718d" font-weight="700"');
+ }
  if(state.step>=5&&actualImage&&!state.solo){
   const img=origin(v,th.image.y),foot=origin(v,0);
   out+=line(foot,img,color.image,4.9,th.kind==="virtual"?"5 4":"",1,'marker-end="url(#tbImg)"');
