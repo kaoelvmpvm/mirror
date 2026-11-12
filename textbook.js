@@ -68,8 +68,8 @@ function make(state,{mini=false,idPrefix="main"}={}){
  out+=maskStart;
  const lensTop=axis-135,lensBottom=axis+135,cx=center;
  const lens=state.mirror==="convexLens"?
-  'M'+(cx)+' '+lensTop+' C'+(cx-37)+' '+(lensTop+74)+' '+(cx-37)+' '+(lensBottom-74)+' '+cx+' '+lensBottom+' C'+(cx+37)+' '+(lensBottom-74)+' '+(cx+37)+' '+(lensTop+74)+' '+cx+' '+lensTop+'Z':
-  'M'+(cx-33)+' '+lensTop+' Q'+(cx+12)+' '+axis+' '+(cx-33)+' '+lensBottom+' L'+(cx+33)+' '+lensBottom+' Q'+(cx-12)+' '+axis+' '+(cx+33)+' '+lensTop+'Z';
+  'M'+(cx)+' '+lensTop+' C'+(cx-17)+' '+(lensTop+74)+' '+(cx-17)+' '+(lensBottom-74)+' '+cx+' '+lensBottom+' C'+(cx+17)+' '+(lensBottom-74)+' '+(cx+17)+' '+(lensTop+74)+' '+cx+' '+lensTop+'Z':
+  'M'+(cx-20)+' '+lensTop+' Q'+(cx+8)+' '+axis+' '+(cx-20)+' '+lensBottom+' L'+(cx+20)+' '+lensBottom+' Q'+(cx-8)+' '+axis+' '+(cx+20)+' '+lensTop+'Z';
  // Thin lens is shown after rays to make its optical center recognizable.
  const opticalCenter=origin(0,0);
  const rayDefs=[
