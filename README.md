@@ -55,3 +55,7 @@
 若 GitHub Pages 尚未啟用，至 **Settings → Pages → Build and deployment** 選擇 **Deploy from a branch**、**main**、**/(root)**、**Save**。
 
 部署後通常網址： https://kaoelvmpvm.github.io/mirror/
+
+## 光軸固定與物距調整
+
+在「課本成像作圖」模式中，主軸固定於 SVG y=270、透鏡光學中心固定於 x=500，F／2F 的畫面位置只由透鏡的焦距與固定比例尺決定，**不會隨物距或像距重新縮放、位移**。物距可以在 30–500 cm 間調整；接近焦點時若像遠超出畫面，會顯示提示並在下方提供像距數值。這項穩定比例尺的規則適用於凸透鏡及凹透鏡教材模式，實際雙界面折射模式仍保留獨立座標縮放。
